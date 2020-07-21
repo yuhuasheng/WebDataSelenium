@@ -87,7 +87,8 @@ public class WebProductDownLoad {
      * 开启浏览器
      */
     private static void startBrowser(String url) {
-        System.setProperty("webdriver.chrome.driver", "C:\\chromedriver_win32\\chromedriver.exe");
+//        System.setProperty("webdriver.chrome.driver", "C:\\chromedriver_win32\\chromedriver.exe");
+        System.setProperty("webdriver.chrome.driver" ,"D:\\chromedriver_win32\\chromedriver.exe") ;
         driver = new ChromeDriver();
         driver.get(url);
         driver.manage().window().maximize();
@@ -97,7 +98,7 @@ public class WebProductDownLoad {
 
     @Test
     public void test() throws Exception {
-        System.setProperty("webdriver.chrome.driver", "C:\\chromedriver_win32\\chromedriver.exe");
+        System.setProperty("webdriver.chrome.driver", "D:\\chromedriver_win32\\chromedriver.exe");
         driver = new ChromeDriver();
         String baseUrl = "http://www.google.co.uk/";
         driver.get(baseUrl);

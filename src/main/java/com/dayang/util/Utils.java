@@ -30,7 +30,7 @@ public class Utils {
                 "Gene ID", "mRNA Refseq", "Protein Refseq", "MIM", "UniProt ID", "Chromosome Location", "Function", "url"};
         HSSFCell cell = null;
         HSSFRow row = sheet.createRow(0);
-        row.setHeightInPoints(50);
+        row.setHeightInPoints(40);
         for (int j = 0; j < title.length; j++) {
             cell = row.createCell(j);
             cell.setCellValue(new HSSFRichTextString(title[j]));
@@ -124,7 +124,7 @@ public class Utils {
     public static void createLine(HSSFSheet sheet, HSSFCellStyle cellStyle, int number, ProteinsInfo proteinsInfo) {
         HSSFCell cell = null;
         HSSFRow row = sheet.createRow(number);
-        row.setHeightInPoints(40);
+        row.setHeightInPoints(30);
 
         cell = row.createCell(0);
         cell.setCellValue(new HSSFRichTextString(String.valueOf(number)));
