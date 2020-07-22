@@ -1,5 +1,7 @@
 package com.dayang.domain;
 
+import java.util.Objects;
+
 /**
  * describe:
  *
@@ -426,5 +428,60 @@ public class ProteinsInfo {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ProteinsInfo that = (ProteinsInfo) o;
+        return Objects.equals(cat, that.cat) &&
+                Objects.equals(productName, that.productName) &&
+                Objects.equals(productOverview, that.productOverview) &&
+                Objects.equals(description, that.description) &&
+                Objects.equals(sourceHost, that.sourceHost) &&
+                Objects.equals(species, that.species) &&
+                Objects.equals(applications, that.applications) &&
+                Objects.equals(tag, that.tag) &&
+                Objects.equals(form, that.form) &&
+                Objects.equals(activity, that.activity) &&
+                Objects.equals(formulation, that.formulation) &&
+                Objects.equals(molecularMass, that.molecularMass) &&
+                Objects.equals(molecularWeight, that.molecularWeight) &&
+                Objects.equals(purity, that.purity) &&
+                Objects.equals(concentration, that.concentration) &&
+                Objects.equals(endotoxin, that.endotoxin) &&
+                Objects.equals(predictedNTerminus, that.predictedNTerminus) &&
+                Objects.equals(bioActivity, that.bioActivity) &&
+                Objects.equals(unitDefinition, that.unitDefinition) &&
+                Objects.equals(aaSequence, that.aaSequence) &&
+                Objects.equals(proteinLength, that.proteinLength) &&
+                Objects.equals(storage, that.storage) &&
+                Objects.equals(reconstitution, that.reconstitution) &&
+                Objects.equals(storageBuffer, that.storageBuffer) &&
+                Objects.equals(tissueSpecificity, that.tissueSpecificity) &&
+                Objects.equals(shippingCondition, that.shippingCondition) &&
+                Objects.equals(stability, that.stability) &&
+                Objects.equals(usage, that.usage) &&
+                Objects.equals(qualityControlTest, that.qualityControlTest) &&
+                Objects.equals(preservative, that.preservative) &&
+                Objects.equals(sequenceSimilarities, that.sequenceSimilarities) &&
+                Objects.equals(geneName, that.geneName) &&
+                Objects.equals(officialSymbol, that.officialSymbol) &&
+                Objects.equals(synonyms, that.synonyms) &&
+                Objects.equals(geneId, that.geneId) &&
+                Objects.equals(mRNARefseq, that.mRNARefseq) &&
+                Objects.equals(proteinRefseq, that.proteinRefseq) &&
+                Objects.equals(MIM, that.MIM) &&
+                Objects.equals(uniProtId, that.uniProtId) &&
+                Objects.equals(chromosomeLocation, that.chromosomeLocation) &&
+                Objects.equals(function, that.function) &&
+                Objects.equals(url, that.url);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(cat, productName, productOverview, description, sourceHost, species, applications, tag, form, activity, formulation, molecularMass, molecularWeight, purity, concentration, endotoxin, predictedNTerminus, bioActivity, unitDefinition, aaSequence, proteinLength, storage, reconstitution, storageBuffer, tissueSpecificity, shippingCondition, stability, usage, qualityControlTest, preservative, sequenceSimilarities, geneName, officialSymbol, synonyms, geneId, mRNARefseq, proteinRefseq, MIM, uniProtId, chromosomeLocation, function, url);
     }
 }

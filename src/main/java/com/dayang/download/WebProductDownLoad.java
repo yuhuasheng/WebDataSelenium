@@ -68,6 +68,11 @@ public class WebProductDownLoad {
      */
     private static final String FILEPATH = "src/main/resources/file/url.txt";
 
+    /**
+     * 文件前缀
+     */
+    private static String FILEPREFIX = "";
+
     public static void main(String[] args) {
 
         /*String filePath = Tools.createFile(FILEPATH);
@@ -86,22 +91,46 @@ public class WebProductDownLoad {
     /**
      * 开启浏览器
      */
-    private static void startBrowser(String url) {
-//        System.setProperty("webdriver.chrome.driver", "C:\\chromedriver_win32\\chromedriver.exe");
-        System.setProperty("webdriver.chrome.driver" ,"D:\\chromedriver_win32\\chromedriver.exe") ;
+    private static void startBrowser(String url) throws AWTException, InterruptedException {
+        System.setProperty("webdriver.chrome.driver", "C:\\chromedriver_win32\\chromedriver.exe");
+//        System.setProperty("webdriver.chrome.driver" ,"D:\\chromedriver_win32\\chromedriver.exe") ;
         driver = new ChromeDriver();
         driver.get(url);
         driver.manage().window().maximize();
         driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
         driver.manage().timeouts().pageLoadTimeout(60, TimeUnit.SECONDS);
+
+
+        /*Robot r = new Robot();
+        r.keyPress(KeyEvent.VK_CONTROL);
+        r.keyPress(KeyEvent.VK_T);
+        r.keyRelease(KeyEvent.VK_CONTROL);
+        r.keyRelease(KeyEvent.VK_T);
+
+        Thread.sleep(2000);
+        ArrayList<String> tabs = new ArrayList<String>(driver.getWindowHandles());*/
     }
 
     @Test
     public void test() throws Exception {
-        System.setProperty("webdriver.chrome.driver", "D:\\chromedriver_win32\\chromedriver.exe");
+        System.setProperty("webdriver.chrome.driver", "C:\\chromedriver_win32\\chromedriver.exe");
         driver = new ChromeDriver();
         String baseUrl = "http://www.google.co.uk/";
         driver.get(baseUrl);
+
+
+
+        /*driver.findElement(By.cssSelector("body")).sendKeys(Keys.CONTROL +"t");
+        ArrayList<String> tabss = new ArrayList<String> (driver.getWindowHandles());
+        driver.switchTo().window(tabss.get(1)); //switches to new tab
+        driver.get("https://www.facebook.com");*/
+
+
+        /*Thread.sleep(2000);
+        driver.manage().window().maximize();
+        driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
+        driver.manage().timeouts().pageLoadTimeout(60, TimeUnit.SECONDS);
+*/
         //To open a new tab
         Robot r = new Robot();
         r.keyPress(KeyEvent.VK_CONTROL);
@@ -114,7 +143,6 @@ public class WebProductDownLoad {
         driver.switchTo().window(tabs.get(1)); //switches to new tab
 
         driver.get("https://www.facebook.com");
-
 
     }
 
@@ -148,19 +176,26 @@ public class WebProductDownLoad {
         List<ProteinsInfo> proteinsInfoList = new ArrayList<>();
         for (String url : resultList) {
             try {
+                //连接地址中的字母
+                FILEPREFIX = url.substring(url.indexOf("_") + 1, url.lastIndexOf("_"));
+                if(url.contains("A")) {
+                    url = "https://www.creativebiomart.net/Product/ClassSearch?tag=A&classid=1&page=7";
+                }
+                System.out.println("==>>FILEPREFIX: " + FILEPREFIX);
                 System.out.println("==>>url: " + url);
+                //开始处理
                 startHandler(url, proteinsInfoList);
             } catch (Exception e) {
                 e.printStackTrace();
                 //输出至Excel中
                 exportExcelFile(proteinsInfoList);
                 System.err.println("循环遍历失败...");
-                break;
+                return;
             }
+            //输出至Excel中
+            exportExcelFile(proteinsInfoList);
         }
 
-        //输出至Excel中
-        exportExcelFile(proteinsInfoList);
     }
 
 
@@ -195,12 +230,21 @@ public class WebProductDownLoad {
             traversalTrElement(proteinsInfoList);
             //点击下一页
             nextPage.click();
+            driver = driver.switchTo().window(driver.getWindowHandle());
+            driver.manage().window().maximize();
+            driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
+            driver.manage().timeouts().pageLoadTimeout(60, TimeUnit.SECONDS);
+            currentCount = "";
+            count = "";
+            nextPage = null;
+            //获取下一页,总页数和下一页按钮
+            getNextTag();
         }
 
     }
 
     /**
-     * 获取下一页和下一页按钮
+     * 获取下一页,总页数和下一页按钮
      */
     private static void getNextTag() {
         WebElement scott = driver.findElement(By.className("scott"));
@@ -220,7 +264,7 @@ public class WebProductDownLoad {
      * @throws AWTException
      * @throws InterruptedException
      */
-    private static void traversalTrElement(List<ProteinsInfo> proteinsInfoList) throws AWTException, InterruptedException {
+    private static void traversalTrElement(List<ProteinsInfo> proteinsInfoList) throws Exception {
         WebElement tableElement = driver.findElement(By.id("table-breakpoint"));
         WebElement tbody = tableElement.findElement(By.tagName("tbody"));
         List<WebElement> trElements = tbody.findElements(By.tagName("tr"));
@@ -234,9 +278,10 @@ public class WebProductDownLoad {
             WebElement span = tdElement.findElement(By.tagName("span"));
             WebElement aElement = span.findElement(By.tagName("a"));
             String href = aElement.getAttribute("href");
-
             //当前句柄
             currentWindow = driver.getWindowHandle();
+
+            Thread.sleep(2000);
             Robot robot = new Robot();
             robot.keyPress(KeyEvent.VK_CONTROL);
             robot.keyPress(KeyEvent.VK_T);
@@ -244,23 +289,23 @@ public class WebProductDownLoad {
             robot.keyRelease(KeyEvent.VK_T);
 
             //休眠五秒,防止无法拿到所有的句柄
-            Thread.sleep(5000);
+            Thread.sleep(3000);
             //详情页
-            detailPage(href, proteinsInfo);
+            detailPage(href, proteinsInfo, proteinsInfoList);
 
-            //添加内容
-            proteinsInfoList.add(proteinsInfo);
         }
     }
-
 
 
     /**
      * 获取详情页信息
      */
-    private static void detailPage(String url, ProteinsInfo proteinsInfo) {
+    private static void detailPage(String url, ProteinsInfo proteinsInfo, List<ProteinsInfo> proteinsInfoList) throws Exception {
         //get all windows
         Set<String> handles = driver.getWindowHandles();
+        if(handles.size() <2) {
+            throw new Exception("打开新的标签页失败...");
+        }
         WebDriver window = null;
         for (String s : handles) {
             if (s.equals(currentWindow)) {
@@ -272,7 +317,7 @@ public class WebProductDownLoad {
                 window.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
                 window.manage().timeouts().pageLoadTimeout(60, TimeUnit.SECONDS);
                 //获取参数页的标签
-                getParamsPage(window, proteinsInfo);
+                getParamsPage(window, proteinsInfo, proteinsInfoList);
 
                 //close the table window
                 window.close();
@@ -287,7 +332,7 @@ public class WebProductDownLoad {
      *
      * @param window 当前页面的驱动类
      */
-    private static void getParamsPage(WebDriver window, ProteinsInfo proteinsInfo) {
+    private static void getParamsPage(WebDriver window, ProteinsInfo proteinsInfo, List<ProteinsInfo> proteinsInfoList) throws Exception {
         String url = window.getCurrentUrl();
         System.out.println("当前页的url为: " + url);
         proteinsInfo.setUrl(url);
@@ -295,18 +340,30 @@ public class WebProductDownLoad {
         WebElement divElement = tab.findElement(By.className("tab-nav"));
         //标签集合
         List<WebElement> aElements = divElement.findElements(By.tagName("a"));
-        for (WebElement element : aElements) {
-            String text = element.getText();
-            if ("Specification".equals(text)) {
-                clickItem(element);
-                //获取item列表
-                getItem(tab, proteinsInfo);
-            } else if ("Gene Information".equals(text)) {
-                clickItem(element);
-                //获取item列表
-                getItem(tab, proteinsInfo);
+        try {
+            for (WebElement element : aElements) {
+                String text = element.getText();
+                if ("Specification".equals(text)) {
+                    clickItem(element);
+                    //获取item列表
+                    getItem(window, proteinsInfo, proteinsInfoList, "Specification");
+                } else if ("Gene Information".equals(text)) {
+                    clickItem(element);
+                    //获取item列表
+                    getItem(window, proteinsInfo, proteinsInfoList, "Gene Information");
+                }
+//                int i = 1/0;
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("产品参数获取失败...");
+        } finally {
+            if (!proteinsInfoList.contains(proteinsInfo)) {
+                proteinsInfoList.add(proteinsInfo);
             }
         }
+
     }
 
     /**
@@ -325,24 +382,32 @@ public class WebProductDownLoad {
     /**
      * 获取item列表(Specification/Gene Information)
      *
-     * @param tab
+     * @param window
      * @param proteinsInfo pojo类
      */
-    private static void getItem(WebElement tab, ProteinsInfo proteinsInfo) {
+    private static void getItem(WebDriver window, ProteinsInfo proteinsInfo, List<ProteinsInfo> proteinsInfoList, String type) {
+        WebElement tab = window.findElement(By.id("tab"));
         WebElement tabConElement = tab.findElement(By.className("tab-con"));
         WebElement jTabConElement = tabConElement.findElement(By.className("j-tab-con"));
-        WebElement tabConItemElement = jTabConElement.findElements(By.className("tab-con-item")).get(0);
+        WebElement tabConItemElement = null;
+        if ("Specification".equals(type)) {
+            tabConItemElement = jTabConElement.findElements(By.className("tab-con-item")).get(0);
+        } else if ("Gene Information".equals(type)) {
+            tabConItemElement = jTabConElement.findElements(By.className("tab-con-item")).get(1);
+        }
         WebElement tableElement = tabConItemElement.findElement(By.tagName("table"));
         WebElement tbodyElement = tableElement.findElement(By.tagName("tbody"));
         List<WebElement> trElements = tbodyElement.findElements(By.tagName("tr"));
         for (WebElement trElement : trElements) {
             List<WebElement> tdElements = trElement.findElements(By.tagName("td"));
             //参数名
-            String paramsName = tdElements.get(0).getText();
+            String paramsName = tdElements.get(0).getText() == null ? "" : tdElements.get(0).getText();
+            paramsName = paramsName.replace(":", "").trim();
             //内容
             String value = tdElements.get(1).getText() == null ? "" : tdElements.get(1).getText();
+
             //设置参数
-            setParams(paramsName, value, proteinsInfo);
+            setParams(paramsName, value, proteinsInfo, proteinsInfoList);
         }
     }
 
@@ -354,95 +419,97 @@ public class WebProductDownLoad {
      * @param value        值
      * @param proteinsInfo pojo类
      */
-    private static void setParams(String paramsName, String value, ProteinsInfo proteinsInfo) {
-        if (paramsName.toLowerCase().startsWith("cat")) {
+    private static void setParams(String paramsName, String value, ProteinsInfo proteinsInfo, List<ProteinsInfo> proteinsInfoList) {
+        if ("cat.no.".equals(paramsName.toLowerCase())) {
             proteinsInfo.setCat(value);
-        } else if (paramsName.toLowerCase().startsWith("product name")) {
+        } else if ("product name".equals(paramsName.toLowerCase())) {
             proteinsInfo.setProductName(value);
-        } else if (paramsName.toLowerCase().startsWith("product overview")) {
+        } else if ("product overview".equals(paramsName.toLowerCase())) {
             proteinsInfo.setProductOverview(value);
-        } else if (paramsName.toLowerCase().startsWith("description")) {
+        } else if ("description".equals(paramsName.toLowerCase())) {
             proteinsInfo.setDescription(value);
-        } else if (paramsName.toLowerCase().startsWith("source")) {
+        } else if ("source".equals(paramsName.toLowerCase())) {
             proteinsInfo.setSourceHost(value);
-        } else if (paramsName.toLowerCase().startsWith("species")) {
+        } else if ("species".equals(paramsName.toLowerCase())) {
             proteinsInfo.setSpecies(value);
-        } else if (paramsName.toLowerCase().startsWith("applications")) {
+        } else if ("applications".equals(paramsName.toLowerCase())) {
             proteinsInfo.setApplications(value);
-        } else if (paramsName.toLowerCase().startsWith("tag")) {
+        } else if ("tag".equals(paramsName.toLowerCase())) {
             proteinsInfo.setTag(value);
-        } else if (paramsName.toLowerCase().startsWith("form")) {
+        } else if ("form".equals(paramsName.toLowerCase())) {
             proteinsInfo.setForm(value);
-        } else if (paramsName.toLowerCase().startsWith("activity")) {
+        } else if ("activity".equals(paramsName.toLowerCase())) {
             proteinsInfo.setActivity(value);
-        } else if (paramsName.toLowerCase().startsWith("formulation")) {
+        } else if ("formulation".equals(paramsName.toLowerCase())) {
             proteinsInfo.setFormulation(value);
-        } else if (paramsName.toLowerCase().startsWith("molecular mass")) {
+        } else if ("molecular mass".equals(paramsName.toLowerCase())) {
             proteinsInfo.setMolecularMass(value);
-        } else if (paramsName.toLowerCase().startsWith("molecular weight")) {
+        } else if ("molecular weight".equals(paramsName.toLowerCase())) {
             proteinsInfo.setMolecularWeight(value);
-        } else if (paramsName.toLowerCase().startsWith("purity")) {
+        } else if ("purity".equals(paramsName.toLowerCase())) {
             proteinsInfo.setPurity(value);
-        } else if (paramsName.toLowerCase().startsWith("concentration")) {
+        } else if ("concentration".equals(paramsName.toLowerCase())) {
             proteinsInfo.setConcentration(value);
-        } else if (paramsName.toLowerCase().startsWith("endotoxin")) {
+        } else if ("endotoxin".equals(paramsName.toLowerCase())) {
             proteinsInfo.setEndotoxin(value);
-        } else if (paramsName.toLowerCase().startsWith("predicted n-terminus")) {
+        } else if ("predicted n-terminus".equals(paramsName.toLowerCase())) {
             proteinsInfo.setPredictedNTerminus(value);
-        } else if (paramsName.toLowerCase().startsWith("bio-activity")) {
+        } else if ("bio-activity".equals(paramsName.toLowerCase())) {
             proteinsInfo.setBioActivity(value);
-        } else if (paramsName.toLowerCase().startsWith("unit definition")) {
+        } else if ("unit definition".equals(paramsName.toLowerCase())) {
             proteinsInfo.setUnitDefinition(value);
-        } else if (paramsName.toLowerCase().startsWith("aa sequence")) {
+        } else if ("aa sequence".equals(paramsName.toLowerCase())) {
             proteinsInfo.setAaSequence(value);
-        } else if (paramsName.toLowerCase().startsWith("protein length")) {
+        } else if ("protein length".equals(paramsName.toLowerCase())) {
             proteinsInfo.setProteinLength(value);
-        } else if (paramsName.toLowerCase().startsWith("storage")) {
+        } else if ("storage".equals(paramsName.toLowerCase())) {
             proteinsInfo.setStorage(value);
-        } else if (paramsName.toLowerCase().startsWith("reconstitution")) {
+        } else if ("reconstitution".equals(paramsName.toLowerCase())) {
             proteinsInfo.setReconstitution(value);
-        } else if (paramsName.toLowerCase().startsWith("storage buffer")) {
+        } else if ("storage buffer".equals(paramsName.toLowerCase())) {
             proteinsInfo.setStorageBuffer(value);
-        } else if (paramsName.toLowerCase().startsWith("tissue specificity")) {
+        } else if ("tissue specificity".equals(paramsName.toLowerCase())) {
             proteinsInfo.setTissueSpecificity(value);
-        } else if (paramsName.toLowerCase().startsWith("shipping condition")) {
+        } else if ("shipping condition".equals(paramsName.toLowerCase())) {
             proteinsInfo.setShippingCondition(value);
-        } else if (paramsName.toLowerCase().startsWith("stability")) {
+        } else if ("stability".equals(paramsName.toLowerCase())) {
             proteinsInfo.setStability(value);
-        } else if (paramsName.toLowerCase().startsWith("usage")) {
+        } else if ("usage".equals(paramsName.toLowerCase())) {
             proteinsInfo.setUsage(value);
-        } else if (paramsName.toLowerCase().startsWith("quality control test")) {
+        } else if ("quality control test".equals(paramsName.toLowerCase())) {
             proteinsInfo.setQualityControlTest(value);
-        } else if (paramsName.toLowerCase().startsWith("preservative")) {
+        } else if ("preservative".equals(paramsName.toLowerCase())) {
             proteinsInfo.setPreservative(value);
-        } else if (paramsName.toLowerCase().startsWith("sequence similarities")) {
+        } else if ("sequence similarities".equals(paramsName.toLowerCase())) {
             proteinsInfo.setSequenceSimilarities(value);
-        } else if (paramsName.toLowerCase().startsWith("gene name")) {
+        } else if ("gene name".equals(paramsName.toLowerCase())) {
             proteinsInfo.setGeneName(value);
-        } else if (paramsName.toLowerCase().startsWith("official symbol")) {
+        } else if ("official symbol".equals(paramsName.toLowerCase())) {
             proteinsInfo.setOfficialSymbol(value);
-        } else if (paramsName.toLowerCase().startsWith("synonyms")) {
+        } else if ("synonyms".equals(paramsName.toLowerCase())) {
             proteinsInfo.setSynonyms(value);
-        } else if (paramsName.toLowerCase().startsWith("gene id")) {
+        } else if ("gene id".equals(paramsName.toLowerCase())) {
             proteinsInfo.setGeneId(value);
-        } else if (paramsName.toLowerCase().startsWith("mrna refseq")) {
+        } else if ("mrna refseq".equals(paramsName.toLowerCase())) {
             proteinsInfo.setmRNARefseq(value);
-        } else if (paramsName.toLowerCase().startsWith("protein refseq")) {
+        } else if ("protein refseq".equals(paramsName.toLowerCase())) {
             proteinsInfo.setProteinRefseq(value);
-        } else if (paramsName.toLowerCase().startsWith("mim")) {
+        } else if ("mim".equals(paramsName.toLowerCase())) {
             proteinsInfo.setMIM(value);
-        } else if (paramsName.toLowerCase().startsWith("uniprot id")) {
+        } else if ("uniprot id".equals(paramsName.toLowerCase())) {
             proteinsInfo.setUniProtId(value);
-        } else if (paramsName.toLowerCase().startsWith("chromosome location")) {
+        } else if ("chromosome location".equals(paramsName.toLowerCase())) {
             proteinsInfo.setChromosomeLocation(value);
-        } else if (paramsName.toLowerCase().startsWith("function")) {
+        } else if ("function".equals(paramsName.toLowerCase())) {
             proteinsInfo.setFunction(value);
         }
+
     }
 
 
     /**
      * 输出产品信息
+     *
      * @param proteinsInfoList
      */
     private static void exportExcelFile(List<ProteinsInfo> proteinsInfoList) {
@@ -451,12 +518,12 @@ public class WebProductDownLoad {
         Date date = new Date();
         try {
             String dateTime = sdf.format(date);
-            String filePath = "D:\\网页爬虫\\Recombinant-Proteins\\";
+            String filePath = "D:\\网页爬虫\\Recombinant-Proteins\\" + FILEPREFIX + "\\";
             File dir = new File(filePath);
             if (!dir.exists()) {
                 dir.mkdirs();
             }
-            String fileName = filePath + "\\" + "Recombinant-Proteins_" + dateTime + ".xls";
+            String fileName = filePath + "\\" + "Recombinant-Proteins_" + FILEPREFIX + "_" + dateTime + ".xls";
             HSSFWorkbook workbook = new HSSFWorkbook();
             HSSFSheet sheet = workbook.createSheet("Recombinant-Proteins");
 
@@ -484,6 +551,7 @@ public class WebProductDownLoad {
             stream = new FileOutputStream(file);
             workbook.write(stream);
             System.out.println("导出完成！");
+            System.out.println("文件路径为: " + file.getAbsolutePath());
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("导出失败！");
