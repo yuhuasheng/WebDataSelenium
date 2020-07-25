@@ -173,8 +173,8 @@ public class WebProductDownLoad {
      */
     private static void getUrlList() {
         List<String> resultList = Tools.getTextContent("/file/url.txt");
-        List<ProteinsInfo> proteinsInfoList = new ArrayList<>();
         for (String url : resultList) {
+            List<ProteinsInfo> proteinsInfoList = new ArrayList<>();
             try {
                 //连接地址中的字母
                 FILEPREFIX = url.substring(url.indexOf("_") + 1, url.lastIndexOf("_"));
@@ -185,6 +185,8 @@ public class WebProductDownLoad {
                 System.out.println("==>>url: " + url);
                 //开始处理
                 startHandler(url, proteinsInfoList);
+                //遍历成功则关闭浏览器,开启新的窗口
+                driver.close();
             } catch (Exception e) {
                 e.printStackTrace();
                 //输出至Excel中
@@ -420,7 +422,7 @@ public class WebProductDownLoad {
      * @param proteinsInfo pojo类
      */
     private static void setParams(String paramsName, String value, ProteinsInfo proteinsInfo, List<ProteinsInfo> proteinsInfoList) {
-        if ("cat.no.".equals(paramsName.toLowerCase())) {
+        if ("cat.no.".equals(paramsName.toLowerCase()) || paramsName.toLowerCase().startsWith("cat")) {
             proteinsInfo.setCat(value);
         } else if ("product name".equals(paramsName.toLowerCase())) {
             proteinsInfo.setProductName(value);
